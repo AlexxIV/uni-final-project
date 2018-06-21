@@ -77,11 +77,41 @@ module.exports = {
     details: {
         get: (req, res) => {
             let articleId = req.params.id;
-            Article.findById(articleId).then(article => {
-                console.log(article.title);
-                res.render('article/details', {article});
-                console.log({article})
+            Article.findById(articleId)
+            .populate({ path: 'edits', options: { sort: { 'creationDate': -1 } } })
+            .then((article) => {
+                if (article.length === 0 || !article) {
+                    req.session.msg = { error: 'Article was not found!' };
+                    res.redirect('/');
+                    return;
+                }
+                let latestEdit = article.edits[0].content.split('\r\n\r\n');
+                article['content'] = latestEdit;
+                res.render('article/details', { article });
+            }).catch(() => {
+                res.sendStatus(400);
+            });
+        }
+    },
+    getLatest: {
+        get: (req,res) => {
+            Article.find({})
+            .sort({ creationDate: -1 })
+            .limit(1)
+            .populate({ path: 'edits', options: { sort: {'creationDate': -1 } } })
+            .then((found) => {
+                if (found.length === 0 || !found) {
+                    req.session.msg = { error: 'Article was not found!' };
+                    res.redirect('/');
+                    return;
+                }
+
+                let article = found[0];
+                let latestEdit = article.edits[0].content.split('\r\n\r\n');
+                article['content'] = latestEdit;
+                res.render('') // TODO
             })
         }
     }
+    
 };
