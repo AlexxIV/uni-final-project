@@ -1,5 +1,6 @@
 const controllers = require('../controllers/index');
 const permissions = require('./permissions');
+const auth = require('../utilities/authorization');
 
 module.exports = (app) => {
     app.get('/', controllers.home.get);

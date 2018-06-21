@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('passport');
 const handlebars = require('express-handlebars');
+const Role = require('../models/Role');
 
 
 module.exports = (app, config) => {
@@ -26,21 +27,26 @@ module.exports = (app, config) => {
     app.use(passport.session());
 
     app.use((req, res, next) => {
-        if (req.isAuthenticated()) {
-            res.locals.hasUserAccess = true;
-        }
-        if (req.user && req.user.hasAccess('admin')) {
-            res.locals.hasAdminAccess = true;
-        }
-        next();
-    });
-
-    app.use((req, res, next) => {
         if(req.user) {
             res.locals.user = req.user;
+
+            Role.findOne({ name: 'Admin' }).then((role) => {
+                if (!role) {
+                    next();
+                }
+
+                if (req.user.roles.indexOf(role_.id) !== -1) {
+                    req.user.isAdmin = true;
+                    req.locals.admin = true;
+                }
+                next();
+            });
+        } else {
+            next();
         }
-        next();
     });
+
+
     app.use(bodyParser.urlencoded({extended: true}));
 
     app.use((req, res, next) => {
